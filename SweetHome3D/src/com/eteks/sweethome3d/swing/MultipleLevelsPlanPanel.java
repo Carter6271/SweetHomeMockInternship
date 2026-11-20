@@ -47,6 +47,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
@@ -95,11 +96,13 @@ public class MultipleLevelsPlanPanel extends JPanel implements PlanView, Printab
   private JScrollPane   planScrollPane;
   private JTabbedPane   multipleLevelsTabbedPane;
   private JPanel        oneLevelPanel;
+  private Home          home;
 
   public MultipleLevelsPlanPanel(Home home, 
                                  UserPreferences preferences, 
                                  PlanController controller) {
     super(new CardLayout());
+    this.home = home;
     createComponents(home, preferences, controller);
     layoutComponents();
     updateSelectedTab(home);
@@ -661,7 +664,8 @@ public class MultipleLevelsPlanPanel extends JPanel implements PlanView, Printab
   /**
    * Prints the plan component.
    */
-  public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+  public int print(Graphics graphics, PageFormat pageFormat, int pageIndex)
+          throws PrinterException {
     return this.planComponent.print(graphics, pageFormat, pageIndex);
   }
 

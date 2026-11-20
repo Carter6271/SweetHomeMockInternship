@@ -56,6 +56,9 @@ import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.PlanView;
 import com.eteks.sweethome3d.viewcontroller.View;
 
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * A printable component used to print or preview the furniture, the plan 
  * and the 3D view of a home.
@@ -279,7 +282,38 @@ public class HomePrintableComponent extends JComponent implements Printable {
           homeName = "";
         }
         String levelName = "";
-        if (this.home.getSelectedLevel() != null) {
+        int firstPlanPage = this.furniturePageCount;
+        if (planView instanceof MultipleLevelsPlanPanel
+                && page >= firstPlanPage
+                && (homePrint == null || homePrint.isPlanPrinted())) {
+          List<Level> printableLevels = new ArrayList<Level>();
+          for (Level level : this.home.getLevels()) {
+            if (level.isViewable()) {
+              printableLevels.add(level);
+            }
+          }
+
+          if (!printableLevels.isEmpty()) {
+            int planPageIndex = page - firstPlanPage;
+            BufferedImage dummyImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+            Graphics dummyGraphics = dummyImage.getGraphics();
+            int pagesPerLevel = 0;
+            try {
+              while (((Printable)planView).print(dummyGraphics, pageFormat, pagesPerLevel) == PAGE_EXISTS) {
+                pagesPerLevel++;
+              }
+            } catch (PrinterException ex) {
+              throw ex;
+            } finally {
+              dummyGraphics.dispose();
+            }
+
+            int levelIndex = pagesPerLevel == 0 ? -1 : planPageIndex / pagesPerLevel;
+            if (levelIndex >= 0 && levelIndex < printableLevels.size()) {
+              levelName = printableLevels.get(levelIndex).getName();
+            }
+          }
+        } else if (this.home.getSelectedLevel() != null) {
           levelName = this.home.getSelectedLevel().getName();
         }
         String homePresentationName = this.controller.getContentManager().getPresentationName(
@@ -351,17 +385,14 @@ public class HomePrintableComponent extends JComponent implements Printable {
           && (homePrint == null
               || homePrint.isPlanPrinted()
               || homePrint.isView3DPrinted())) {
-        final Level selectedLevel = home.getSelectedLevel();
         furnitureTable = (FurnitureTable)furnitureView;
         furnitureFilter = furnitureTable.getFurnitureFilter();
         furnitureTable.setFurnitureFilter(new FurnitureTable.FurnitureFilter() {
-            public boolean include(Home home, HomePieceOfFurniture piece) {
-              // Print only furniture at selected level when the plan or the 3D view is printed
-              return (furnitureFilter == null || furnitureFilter.include(home, piece))
-                  && piece.isAtLevel(selectedLevel)
-                  && (piece.getLevel() == null || piece.getLevel().isViewable());
-            }
-          });
+          public boolean include(Home home, HomePieceOfFurniture piece) {
+            return (furnitureFilter == null || furnitureFilter.include(home, piece))
+                    && (piece.getLevel() == null || piece.getLevel().isViewable());
+          }
+        });
       } else {
         furnitureFilter = null;
       }
