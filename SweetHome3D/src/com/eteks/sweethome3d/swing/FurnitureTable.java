@@ -921,6 +921,9 @@ public class FurnitureTable extends JTable implements View, Printable {
           case HEIGHT : 
             writer.write(sizeFormat.format(copiedPiece.getHeight()));
             break;
+          case VOLUME:
+            writer.write(String.valueOf(copiedPiece.getWidth() * copiedPiece.getHeight() * copiedPiece.getDepth()));
+            break;
           case X : 
             writer.write(sizeFormat.format(copiedPiece.getX()));
             break;
@@ -1128,9 +1131,11 @@ public class FurnitureTable extends JTable implements View, Printable {
           return preferences.getLocalizedString(FurnitureTable.class, "widthColumn");
         case DEPTH :
           return preferences.getLocalizedString(FurnitureTable.class, "depthColumn");
-        case HEIGHT : 
+        case HEIGHT :
           return preferences.getLocalizedString(FurnitureTable.class, "heightColumn");
-        case X : 
+        case VOLUME:
+          return preferences.getLocalizedString(FurnitureTable.class, "volumeColumn");
+        case X :
           return preferences.getLocalizedString(FurnitureTable.class, "xColumn");
         case Y :
           return preferences.getLocalizedString(FurnitureTable.class, "yColumn");
@@ -1178,6 +1183,8 @@ public class FurnitureTable extends JTable implements View, Printable {
         case Y :
         case ELEVATION : 
           return 50;
+        case VOLUME:
+          return 80;
         case ANGLE :
           return 35;        
         case LEVEL :
@@ -1215,6 +1222,8 @@ public class FurnitureTable extends JTable implements View, Printable {
           return getSizeRenderer(HomePieceOfFurniture.SortableProperty.DEPTH, preferences);
         case HEIGHT : 
           return getSizeRenderer(HomePieceOfFurniture.SortableProperty.HEIGHT, preferences);
+        case VOLUME:
+          return getVolumeRenderer(preferences);
         case X : 
           return getSizeRenderer(HomePieceOfFurniture.SortableProperty.X, preferences);
         case Y :
@@ -1374,6 +1383,28 @@ public class FurnitureTable extends JTable implements View, Printable {
         default :
           throw new IllegalArgumentException(property + " column not a size column");
       }
+    }
+
+    /**
+     * Returns a renderer that displays the volume of a piece of furniture according to a user's preferences,
+     * calculated by multiplying width * depth * height.
+     */
+    private TableCellRenderer getVolumeRenderer(final UserPreferences preferences) {
+      return new DefaultTableCellRenderer() {
+        @Override
+        public Component getTableCellRendererComponent(JTable table,
+            Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+          HomePieceOfFurniture piece = (HomePieceOfFurniture)value;
+          String volume;
+          if (value != null) {
+            volume = String.format("%.2f", piece.getWidth() * piece.getHeight() * piece.getDepth());
+          } else {
+            volume = "";
+          }
+          setHorizontalAlignment(JLabel.RIGHT);
+          return super.getTableCellRendererComponent(table, volume, isSelected, hasFocus, row, column);
+        }
+      };
     }
 
     /**
